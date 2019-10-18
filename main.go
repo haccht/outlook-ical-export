@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	ole "github.com/go-ole/go-ole"
@@ -16,6 +16,7 @@ var (
 )
 
 func main() {
+	flag.Parse()
 
 	ole.CoInitialize(0)
 	unknown, _ := oleutil.CreateObject("Outlook.Application")
@@ -26,6 +27,7 @@ func main() {
 	export := oleutil.MustCallMethod(folder, "GetCalendarExporter").ToIDispatch()
 
 	cwd, _ := os.Getwd()
+	outfile := filepath.Join(cwd, *filename)
 	enddate := time.Now().Add(time.Duration(*duration*24) * time.Hour)
 
 	oleutil.MustPutProperty(export, "CalendarDetail", 2)
@@ -35,6 +37,5 @@ func main() {
 	oleutil.MustPutProperty(export, "IncludePrivateDetails", true)
 	oleutil.MustPutProperty(export, "RestrictToWorkingHours", false)
 
-	filepath := fmt.Sprintf("%s\\%s", cwd, filename)
-	oleutil.MustCallMethod(export, "SaveAsICal", filepath)
+	oleutil.MustCallMethod(export, "SaveAsICal", outfile)
 }
